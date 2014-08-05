@@ -26,8 +26,9 @@
 
 			sorter.call_this_method_upon_load_completion( function ( load_map ) {
 				module.nebula.get.require_package_modules({
-					load_map       : load_map,
-					root_directory : module.root
+					main_module_name : module.configuration.name,
+					load_map         : load_map,
+					root_directory   : module.root
 				})
 			})
 
