@@ -96,7 +96,6 @@
 
 			self         = this
 			module_paths = []
-
 			for ( module in require.load_map ) { 
 				module_paths = module_paths.concat( require.load_map[module] )
 			}
@@ -110,7 +109,6 @@
 					object : arguments
 				})
 				module_by_name = self.sort_module_path_map_to_module_by_name_map( module_by_path )
-				
 				for ( var path in module_by_path ) {
 
 					var pure_library, premited_library
@@ -130,9 +128,9 @@
 				}
 				// can put a filter in here that filters all the global variables that decide 
 				// what does into the the app
-				console.log( require )
-				console.log( module_by_path )
-				console.log( module_by_path[require.main_module_name] )
+				// console.log( require )
+				// console.log( module_by_path )
+				// console.log( module_by_path[require.main_module_name] )
 				module_by_path[require.main_module_name].make()
 			})
 		},
