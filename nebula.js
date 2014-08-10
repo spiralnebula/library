@@ -16,7 +16,10 @@ define({
 			
 			module_has_loaded : function ( module ) {
 				
-				this.modules[module.called] = module.returned
+				this.modules[module.called] = ( this.modules[module.called] ? 
+					this.modules[module.called].concat( module.returned ) : 
+					[].concat( module.returned ) 
+				)
 
 				if ( this.is_module_loading_done() ) {
 					this.load_completion_method(this.modules)
