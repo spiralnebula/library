@@ -23,6 +23,12 @@
 			var self
 			self = this
 
+			if ( package.main_package ) {
+				package.sort.loading_module({
+					path : package.main_package.name
+				})
+			}
+
 			if ( package.require.package && package.require.package.length > 0 ) {
 				
 				package.previous_path = package.previous_path || ""
@@ -76,23 +82,23 @@
 							// console.log( package_path )
 							package.sort.loaded_module({
 								path     : package_path,
-							// 	returned : self.loop({
-							// 		array    : [].concat( configuration.main, configuration.module ),
-							// 		start_at : 0,
-							// 		into     : [],
-							// 		if_done  : function ( loop ) { 
-							// 			return loop.into
-							// 		},
-							// 		else_do : function ( loop ) {
-							// 			return { 
-							// 				array    : loop.array,
-							// 				start_at : loop.start_at + 1,
-							// 				into     : loop.into.concat( previous_path + loop.array[loop.start_at] ),
-							// 				if_done  : loop.if_done,
-							// 				else_do  : loop.else_do,
-							// 			}
-							// 		}
-								// })
+								returned : self.loop({
+									array    : [].concat( configuration.main, configuration.module ),
+									start_at : 0,
+									into     : [],
+									if_done  : function ( loop ) { 
+										return loop.into
+									},
+									else_do : function ( loop ) {
+										return { 
+											array    : loop.array,
+											start_at : loop.start_at + 1,
+											into     : loop.into.concat( previous_path + loop.array[loop.start_at] ),
+											if_done  : loop.if_done,
+											else_do  : loop.else_do,
+										}
+									}
+								})
 							})
 
 						})
@@ -100,6 +106,13 @@
 						loop.start_at += 1
 						return loop
 					}
+				})
+			}
+
+			if ( package.main_package ) {
+				package.sort.loaded_module({
+					path     : package.main_package.name,
+					returned : package.loaded
 				})
 			}
 		},

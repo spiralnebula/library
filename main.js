@@ -32,9 +32,9 @@
 				require        : module.configuration, 
 				sort           : sorter,
 				root_directory : module.root,
-				module         : { 
-					to_load : [].concat( module.configuration.name ),
-					loaded  : [].concat( module.configuration.main, module.configuration.module )
+				main_package   : { 
+					name   : module.configuration.name,
+					loaded : [].concat( module.configuration.main, module.configuration.module )
 				}
 			})
 		}
