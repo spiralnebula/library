@@ -79,7 +79,7 @@
 								root_directory : package.root_directory,
 								previous_path  : previous_path
 							})
-							// console.log( package_path )
+
 							package.sort.loaded_module({
 								path     : package_path,
 								returned : self.loop({
@@ -90,6 +90,9 @@
 										return loop.into
 									},
 									else_do : function ( loop ) {
+										window.plusplus = window.plusplus || 0
+										window.plusplus++
+										console.log( window.plusplus + " "+ previous_path + loop.array[loop.start_at] )
 										return { 
 											array    : loop.array,
 											start_at : loop.start_at + 1,
@@ -112,22 +115,18 @@
 			if ( package.main_package ) {
 				package.sort.loaded_module({
 					path     : package.main_package.name,
-					returned : package.loaded
+					returned : package.main_package.loaded
 				})
 			}
 		},
 
 		require_package_modules : function ( require ) {
-			
+
 			var module_paths, self
 
 			self         = this
-			module_paths = []
-			
-			for ( module in require.load_map ) { 
-				module_paths = module_paths.concat( require.load_map[module] )
-			}
-
+			module_paths = require.load_map.slice(0)
+			console.log( require )
 			requirejs( module_paths, function () {
 				
 				var module_by_path, module_by_name

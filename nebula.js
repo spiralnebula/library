@@ -149,6 +149,7 @@
 			self = this
 			return {
 				modules             : [],
+				loaded              : [],
 				loading_done        : [],
 				load_completion_map : {
 					path : [],
@@ -167,7 +168,8 @@
 				},
 				loaded_module  : function ( module ) {
 					var all_modules_have_loaded
-					this.modules             = this.modules.concat( module.returned || [] )
+					// this.modules             = this.modules.concat( module.returned || [] )
+					this.loaded              = this.loaded.concat( module.returned || [] )
 					this.load_completion_map = self.create_updated_load_completion_map({
 						map  : this.load_completion_map,
 						path : module.path
@@ -181,7 +183,7 @@
 					if ( all_modules_have_loaded ) {
 						this.loading_done = this.loading_done.concat( true )
 						this.loading_done_method.call({}, {
-							path : this.modules
+							path : this.loaded
 						})
 					}
 				},				
