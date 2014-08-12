@@ -90,9 +90,6 @@
 										return loop.into
 									},
 									else_do : function ( loop ) {
-										window.plusplus = window.plusplus || 0
-										window.plusplus++
-										console.log( window.plusplus + " "+ previous_path + loop.array[loop.start_at] )
 										return { 
 											array    : loop.array,
 											start_at : loop.start_at + 1,
