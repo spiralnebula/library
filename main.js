@@ -15,7 +15,6 @@
 	window,
 	{ 
 		make : function ( module ) {
-
 			var sorter
 
 			sorter = module.nebula.nebula.make()
@@ -23,7 +22,21 @@
 				module.nebula.get.require_package_modules({
 					main_module_name : module.configuration.name,
 					load_map         : load_map.path,
-					root_directory   : module.root
+					root_directory   : module.root,
+					set_global       : function ( object ) { 
+						
+						if ( module.configuration.start ) { 
+							
+							if ( module.configuration.start.initiate ) { 
+								object.make()
+							}
+
+							if ( module.configuration.start.test ) { 
+								window[module.configuration.name] = object
+								window[module.configuration.name].make( module.configuration.start.test.with || {} )
+							}
+						}
+					}
 				})
 			})
 

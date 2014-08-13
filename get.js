@@ -123,7 +123,7 @@
 
 			self         = this
 			module_paths = require.load_map.slice(0)
-			console.log( require )
+
 			requirejs( module_paths, function () {
 				
 				var module_by_path, module_by_name
@@ -156,7 +156,7 @@
 				// console.log( require )
 				// console.log( module_by_path )
 				// console.log( module_by_path[require.main_module_name] )
-				module_by_path[require.main_module_name].make()
+				require.set_global( module_by_path[require.main_module_name] )
 			})
 		},
 
