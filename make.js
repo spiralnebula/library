@@ -37,6 +37,8 @@
 								window[module.configuration.name] = object
 								window[module.configuration.name].make( module.configuration.start.test.with || {} )
 							}
+						} else { 
+							object.make()
 						}
 					}
 				})

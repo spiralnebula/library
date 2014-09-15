@@ -87,13 +87,13 @@
 			if (  directory_from_attribute )  { 
 				return directory_from_attribute
 			} else {
-				
+			
 				var root_path, script_source_from_attribute
 
 				script_source_from_attribute = last_loaded_script.getAttribute("src")
 
 				if ( last_loaded_script.src === script_source_from_attribute ) {
-					return this.get_path_directory( script_source_from_attribute )
+					return this.get_path_directory( this.get_path_directory( script_source_from_attribute ) )
 				}
 				
 				root_path = last_loaded_script.src.replace( script_source_from_attribute, "" )
