@@ -15,20 +15,21 @@
 	window,
 	{ 
 		make : function ( module ) {
-			console.log( module )
-			var sorter
+			
+			var count_object
 
-			sorter = module.nebula.nebula.make()
-			sorter.call_this_method_on_load_completion( function ( load_map ) {
+			count_object = module.nebula.nebula.make()
+			count_object.call_this_method_on_load_completion( function ( load_map ) {
+
 				module.nebula.get.require_package_modules({
 					main_module_name : module.configuration.name,
 					load_map         : load_map.path,
 					root_directory   : module.root,
-					set_global       : function ( object ) { 
-						
+					set_global       : function ( object ) {
+
 						if ( module.configuration.start ) { 
 							
-							if ( module.configuration.start.initiate ) { 
+							if ( module.configuration.start.initiate ) {
 								object.make()
 							}
 
@@ -39,11 +40,12 @@
 						}
 					}
 				})
+				
 			})
 
-			module.nebula.get.make({
+			module.nebula.get.require_package_configuration({
 				require        : module.configuration, 
-				sort           : sorter,
+				sort           : count_object,
 				root_directory : module.root,
 				main_package   : { 
 					name   : module.configuration.name,

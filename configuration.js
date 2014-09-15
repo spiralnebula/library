@@ -1,5 +1,5 @@
 define({
-	main   : "main",
+	main   : "make",
 	module : [
 		"get",
 		"nebula",

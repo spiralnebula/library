@@ -215,8 +215,8 @@
 		get_module_that_is_in_a_folder_of_the_same_scope : function ( module ) { 
 			
 			var library_paths, local_directory_names, potential_paths, module_directory
-
-			library_paths         = this.get_object_keys( module.library )
+			
+			library_paths         = this.nebula.morph.get_the_keys_of_an_object( module.library )
 			module_directory      = ( module.location ? this.get_path_directory( module.location ) + "/" : "" )
 			local_directory_names = this.get_folder_names_in_the_path_based_on_map_by_name({
 				path      : module_directory,
@@ -406,15 +406,17 @@
 			}
 		},
 
-		get_object_keys : function ( object ) {
-			var keys, property
-			keys = []
-			for ( property in object ) { 
-				if ( object.hasOwnProperty( property ) ) { 
-					keys = keys.concat( property )
-				}
+		get_full_url_from_root_and_path : function ( get ) {
+			var file_type_match, file_type, known_file_types
+			file_type_match  = get.path.match(/\.[a-zA-Z0-9]*$/)
+			known_file_types = [".json", ".js"]
+			file_type        = ( file_type_match && file_type_match.length > 0 ? file_type_match.slice(file_type_match.length-1)[0] : false )
+			
+			if ( file_type !== false && known_file_types.indexOf( file_type ) > -1 ) {
+				return get.root +"/"+ get.path
+			} else { 
+				return get.root +"/"+ get.path +".js"
 			}
-			return keys
 		},
 
 		loop : function (loop) {
