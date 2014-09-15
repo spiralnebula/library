@@ -1,6 +1,9 @@
 
 var module, hash_map, module_by_name_map
-module   = window.sort
+module        = window.sort
+module.nebula = {
+	morph : window.morph
+}
 hash_map = {
 	"js/node_maker"             : {},
 	"js/morph"                  : {},
@@ -30,20 +33,6 @@ module_by_name_map = {
 		"js/scrub/scrub"          : "module:js/scrub/scrub"
 	},
 }
-
-describe("get objects keys", function() {
-	it("gets all the keys", function() {
-		expect(module.get_object_keys({
-			"js/s"       : 1,
-			"js/stuff"   : 2,
-			"some/stuff" : 3
-		})).toEqual([
-			"js/s",
-			"js/stuff",
-			"some/stuff",
-		])
-	})
-})
 
 describe("get path directory ", function() {
 
