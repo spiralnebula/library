@@ -7,8 +7,46 @@
 	root_directory     = module.get_the_root_directory_based_on_last_loaded_script( last_loaded_script )
 
 	if ( typeof window.define === 'function' && window.define.amd) {
-		moudle.begin_loading({
-			directory : root_directory
+		console.log("amd exists")
+		requirejs([
+			root_directory + "/nebula/configuration.js",
+			root_directory + "/nebula/morph/morph.js",
+			root_directory + "/configuration.js"
+		], function ( tool_configuration, morph, module_configuration ) {
+
+			requirejs( 
+				morph.index_loop({
+					subject : [].concat( tool_configuration.main, tool_configuration.module ),
+					else_do : function ( loop ) {
+						return loop.into.concat( root_directory + "/nebula/"+ loop.indexed +".js" )
+					}
+				}), 
+				function () {
+
+					var nebula_library, tool_name, tool_object
+					tool_name   = [].concat( tool_configuration.module, "entry", "morph" )
+					tool_object = Array.prototype.slice.call( arguments ).slice(1).concat( module, morph )
+					tools       = morph.get_object_from_array({
+						key   : tool_name,
+						value : tool_object
+					})
+					nebula_library = morph.index_loop({
+						subject : Array.prototype.slice.call( arguments ).slice(1).concat( module, morph ),
+						into    : {},
+						else_do : function ( loop ) {
+							loop.indexed.nebula              = loop.into
+							loop.into[tool_name[loop.index]] = loop.indexed
+							return loop.into
+						}
+					})
+
+					arguments[0].make({
+						nebula        : nebula_library,
+						configuration : module_configuration,
+						root          : root_directory
+					})
+				}
+			)
 		})
 	} else {
 
