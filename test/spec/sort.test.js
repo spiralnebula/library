@@ -588,4 +588,16 @@ describe("get modules which are allowed from library based on location", functio
 			},
 		})).toEqual({})		
 	})
+
+})
+
+describe("sort module path map to module by name map", function() {
+
+	it("sorts a path map that has no outside directory access or file extensions", function() {
+			
+	})
+
+	it("sorts a path map that has outside directory access and file <extensions></extensions>", function() {
+			
+	})	
 })
