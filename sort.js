@@ -333,7 +333,7 @@
 
 			var path, module_by_name_map
 			module_by_name_map = {}
-
+			console.log( map )
 			for ( path in map ) {
 				var split_path, module_name
 				split_path  = path.split("/")

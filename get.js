@@ -115,9 +115,10 @@
 					}))
 				}
 			})
-			console.log( self.nebula.sort.nebula )
 
+			// console.log( self.nebula.sort.nebula )
 			// console.log(module_load_paths)
+			
 			requirejs( module_load_paths, function () {
 				var module_by_path, module_by_name
 
