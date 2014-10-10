@@ -333,14 +333,19 @@
 
 			var path, module_by_name_map
 			module_by_name_map = {}
-			console.log( map )
+			
 			for ( path in map ) {
+				
 				var split_path, module_name
+
 				split_path  = path.split("/")
 				module_name = split_path[split_path.length-1]
+
 				if ( !module_by_name_map.hasOwnProperty( module_name ) ) {
 					module_by_name_map[module_name] = {}
 				}
+
+				console.log( map[path] )
 				module_by_name_map[module_name][path] = map[path]
 			}
 

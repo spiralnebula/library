@@ -41,10 +41,10 @@
 
 								requirejs( start_paths, function () { 
 
-									console.log( module.nebula.sort.sort_module_paths_and_objects_into_module_path_map({
+									console.log( module.nebula.sort.sort_module_path_map_to_module_by_name_map( module.nebula.sort.sort_module_paths_and_objects_into_module_path_map({
 										path   : start_paths,
 										object : arguments
-									}))
+									})))
 								})
 
 							} else { 
