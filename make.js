@@ -30,35 +30,44 @@
 
 						if ( module.paramaters.start_with ) {
 
-							if ( module.configuration.start && module.configuration.start.hasOwnProperty( module.paramaters.start_with ) ) {
+							if (
+								module.configuration.start && 
+								module.configuration.start.with.hasOwnProperty( module.paramaters.start_with ) 
+							) {
 
 								var start_paths = module.nebula.morph.index_loop({
-									"subject" : module.configuration.start[module.paramaters.start_with],
+									"subject" : module.configuration.start.with[module.paramaters.start_with],
 									"else_do" : function ( loop ) {
 										return loop.into.concat( module.root +"/"+ loop.indexed +".js" )
 									}
 								})
 
 								requirejs( start_paths, function () {
-									object.make(
-										module.nebula.morph.object_loop({
-											"subject" : module.nebula.morph.flatten_object({
-												to_level : 1,
-												object   : module.nebula.sort.sort_module_path_map_to_module_by_name_map( 
-													module.nebula.sort.sort_module_paths_and_objects_into_module_path_map({
-														path   : start_paths,
-														object : arguments
-													})
-												)
-											}),
-											"else_do" : function ( loop ) { 
-												return { 
-													key   : module.nebula.sort.get_path_details( loop.key ).module_name,
-													value : loop.value
-												}
+
+									var paramaters = module.nebula.morph.object_loop({
+										"subject" : module.nebula.morph.flatten_object({
+											to_level : 1,
+											object   : module.nebula.sort.sort_module_path_map_to_module_by_name_map( 
+												module.nebula.sort.sort_module_paths_and_objects_into_module_path_map({
+													path   : start_paths,
+													object : arguments
+												})
+											)
+										}),
+										"else_do" : function ( loop ) { 
+											return { 
+												key   : module.nebula.sort.get_path_details( loop.key ).module_name,
+												value : loop.value
 											}
-										})
-									)
+										}
+									})
+
+									if ( module.configuration.start.global ) { 
+										window[module.configuration.name] = object.make( paramaters )
+									} else { 
+										object.make( paramaters )
+									}
+									
 								})
 
 							} else { 
