@@ -6,7 +6,8 @@
 	last_loaded_script        = loaded_scripts[loaded_scripts.length-1]
 	paramaters                = module.get_data_type_attribute_values( last_loaded_script )
 	paramaters.root_directory = module.remove_slash_at_the_end_of_directory_if_it_has_it(
-		paramaters.root_directory || module.get_the_root_directory_based_on_last_loaded_script_src( last_loaded_script )
+		paramaters.root_directory || 
+		module.get_the_root_directory_based_on_last_loaded_script_src( last_loaded_script )
 	)
 
 	if ( typeof window.define === 'function' && window.define.amd) {

@@ -39,32 +39,31 @@
 									}
 								})
 
-								requirejs( start_paths, function () { 
-
-									console.log( module.nebula.sort.sort_module_path_map_to_module_by_name_map( module.nebula.sort.sort_module_paths_and_objects_into_module_path_map({
-										path   : start_paths,
-										object : arguments
-									})))
+								requirejs( start_paths, function () {
+									object.make(
+										module.nebula.morph.object_loop({
+											"subject" : module.nebula.morph.flatten_object({
+												to_level : 1,
+												object   : module.nebula.sort.sort_module_path_map_to_module_by_name_map( 
+													module.nebula.sort.sort_module_paths_and_objects_into_module_path_map({
+														path   : start_paths,
+														object : arguments
+													})
+												)
+											}),
+											"else_do" : function ( loop ) { 
+												return { 
+													key   : module.nebula.sort.get_path_details( loop.key ).module_name,
+													value : loop.value
+												}
+											}
+										})
+									)
 								})
 
 							} else { 
 								console.warn("package cant start with \""+ module.paramaters.start_with +"\" because it does not exists in the configuration.js file")
 							}
-							// requirejs( 
-							// 	module.configuration.start, 
-							// 	function ( loop ) {
-
-							// 	}
-							// )
-							
-							// if ( module.configuration.start.initiate ) {
-							// 	object.make()
-							// }
-
-							// if ( module.configuration.start.test ) { 
-							// 	window[module.configuration.name] = object
-							// 	window[module.configuration.name].make( module.configuration.start.test.with || {} )
-							// }
 
 						} else { 
 							object.make()

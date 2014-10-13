@@ -115,9 +115,6 @@
 					}))
 				}
 			})
-
-			// console.log( self.nebula.sort.nebula )
-			// console.log(module_load_paths)
 			
 			requirejs( module_load_paths, function () {
 				var module_by_path, module_by_name
@@ -126,8 +123,9 @@
 					path   : module_paths,
 					object : arguments
 				})
-				module_by_name = self.nebula.sort.sort_module_path_map_to_module_by_name_map( module_by_path )
 
+				module_by_name = self.nebula.sort.sort_module_path_map_to_module_by_name_map( module_by_path )
+				
 				for ( var path in module_by_path ) {
 
 					var pure_library, premited_library

@@ -588,3 +588,61 @@
 			})).toEqual("somess")
 		})
 	})
+
+
+	describe("flatten object", function() {
+		it("flattens nested objects", function() {
+			expect(module.flatten_object({ 
+				object : {
+					some : "here",
+					som  : {
+						level : "2"
+					},
+					somesome : { 
+						"level1" : {
+							"level2" : "3"
+						},
+						"levelsome" : {
+							"levelsomesome" : {
+								"level3" : "4"
+							}
+						}
+					}
+				}
+			})).toEqual({
+				"some"   : "here",
+				"level"  : "2",
+				"level2" : "3",
+				"level3" : "4"
+			})
+		})
+
+		it("flattens objects to a specified depth level", function() {
+			expect(module.flatten_object({
+				to_level : 1,
+				object   : {
+					"some" : { 
+						"level1" : 1
+					},
+					"somesome" : {
+						"level1.1" : 2,
+						"level2"   : {
+							"level2.2" : 3,
+							"moremore" : { 
+								"level.3.3" : 4
+							}
+						}
+					}
+				}
+			})).toEqual({
+				"level1"   : 1,
+				"level1.1" : 2,
+				"level2"   : {
+					"level2.2" : 3,
+					"moremore" : { 
+						"level.3.3" : 4
+					}
+				}
+			})	
+		})
+	})

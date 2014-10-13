@@ -577,6 +577,37 @@
 				return replace.what
 		},
 
+		flatten_object : function ( flatten ) {
+			
+			var self
+			
+			flatten.to_level = flatten.to_level || Infinity
+			flatten.on_level = flatten.on_level || 0
+			self             = this
+
+			return this.object_loop({
+				"subject" : flatten.object,
+				"into?"   : flatten.into || {},
+				"else_do" : function ( loop ) {
+
+					if ( loop.value.constructor === Object && flatten.on_level < flatten.to_level ) {
+						loop.into = self.flatten_object({
+							object   : loop.value,
+							into     : loop.into,
+							on_level : flatten.on_level + 1,
+							to_level : flatten.to_level 
+						})
+					} else { 
+						loop.into[loop.key] = loop.value
+					}
+
+					return {
+						into : loop.into
+					}
+				}
+			})
+		},
+
 		exceptions : { 
 			definition : function (message) { 
 				this.name    = "Definition Error"
