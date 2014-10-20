@@ -34,6 +34,14 @@
 					paramaters.root_directory + "/configuration.js"
 				], function ( tool_configuration, morph, module_configuration ) {
 
+					require.config({
+						map : {
+							"*" : {
+								"css" : paramaters.root_directory + "/nebula/require_css/css.js"
+							}
+						}
+					})
+
 					requirejs( 
 						morph.index_loop({
 							subject : [].concat( tool_configuration.main, tool_configuration.module ),

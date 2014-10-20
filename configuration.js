@@ -3,6 +3,6 @@ define({
 	module : [
 		"get",
 		"nebula",
-		"sort",
+		"sort"
 	]
 })

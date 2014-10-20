@@ -37,7 +37,7 @@
 
 								var start_paths = module.nebula.morph.index_loop({
 									"subject" : module.configuration.start.with[module.paramaters.start_with],
-									"else_do" : function ( loop ) {
+									else_do   : function ( loop ) {
 										return loop.into.concat( module.root +"/"+ loop.indexed +".js" )
 									}
 								})
@@ -54,7 +54,7 @@
 												})
 											)
 										}),
-										"else_do" : function ( loop ) { 
+										else_do  : function ( loop ) {
 											return { 
 												key   : module.nebula.sort.get_path_details( loop.key ).module_name,
 												value : loop.value
@@ -81,6 +81,13 @@
 				})
 				
 			})
+			
+			console.log( module.configuration )
+			console.log( module.nebula["require_css/require_css"] )
+			requirejs( ["css!"+module.configuration.style], function ( done ) { 
+				console.log("done")
+			})
+			// console.log( module.nebula["require_css/require_css"].load( module.configuration.style ) )
 
 			module.nebula.get.require_package_configuration({
 				require        : module.configuration, 
