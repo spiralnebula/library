@@ -18,6 +18,21 @@
 			require : [],
 		},
 
+		get_module_paths_with_appended_root_directory : function ( get ) { 
+			var self = this
+			return this.nebula.morph.index_loop({
+				subject : get.module_paths,
+				else_do : function ( loop ) {
+					return loop.into.concat( 
+						self.get_full_url_from_root_and_path({
+							root : get.root_directory,
+							path : loop.indexed
+						})
+					)
+				}
+			})
+		},
+
 		get_previous_path : function ( path ) { 
 			return ( 
 				path.previous ?

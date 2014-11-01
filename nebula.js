@@ -14,6 +14,62 @@
 })( 
 	window,
 	{
+		make    : function () {
+			var self
+			self = this
+			return {
+				modules   : [],
+				load_path : {
+					module : [],
+					style  : []
+				},
+				loading_done        : [],
+				load_completion_map : {
+					path : [],
+					load : []
+				},
+				loading_done_method : {},
+				loading_module      : function ( module ) {
+
+					this.load_completion_map = self.create_load_completion_map({
+						module: this.modules.slice(0),
+						added : module.path,
+						from  : this.load_completion_map
+					})
+
+					this.modules             = this.modules.concat( module.path )
+				},
+				loaded_module       : function ( module ) {
+					
+					var all_modules_have_loaded
+					this.load_path.module    = this.load_path.module.concat( module.returned.module || [] )
+					this.load_path.style     = this.load_path.style.concat( module.returned.style   || [] )
+					this.load_completion_map = self.create_updated_load_completion_map({
+						map  : this.load_completion_map,
+						path : module.path
+					})
+
+					all_modules_have_loaded  = self.do_all_members_of_an_array_equal({
+						value : true,
+						array : this.load_completion_map.load
+					})
+
+					if ( all_modules_have_loaded ) {
+						this.loading_done = this.loading_done.concat( true )
+						this.loading_done_method.call({}, {
+							path : this.load_path
+						})
+					}
+				},				
+				call_this_method_on_load_completion : function ( method ) {
+					this.loading_done_method = method
+				},
+
+				is_module_loading_done    : self.is_module_loading_done,
+				get_module_name_from_path : self.get_module_name_from_path
+			}
+		},
+
 		get_module_name_from_path : function ( path ) {
 			var split
 			split = path.split("/")
@@ -93,6 +149,7 @@
 		create_updated_load_completion_map : function ( create ) {
 
 			var path_index, index_is_true, indentical_false_indexes
+
 			path_index               = create.map.path.indexOf( create.path )
 			index_is_true            = create.map.load[path_index]
 			indentical_false_indexes = this.get_common_values_of_two_arrays({
@@ -107,6 +164,7 @@
 					})
 				]
 			})
+
 			if ( index_is_true && indentical_false_indexes.length > 0 ) {
 				create.map.load[indentical_false_indexes[0]] = true
 			} else {
@@ -141,58 +199,6 @@
 						load : create.into.load.concat( false )
 					}
 				})
-			}
-		},
-
-		make    : function () {
-			var self
-			self = this
-			return {
-				modules             : [],
-				loaded              : [],
-				loading_done        : [],
-				load_completion_map : {
-					path : [],
-					load : []
-				},
-				loading_done_method : {},
-				loading_module : function ( module ) {
-
-					this.load_completion_map = self.create_load_completion_map({
-						module: this.modules.slice(0),
-						added : module.path,
-						from  : this.load_completion_map
-					})
-					this.modules             = this.modules.concat( module.path )
-
-				},
-				loaded_module  : function ( module ) {
-					var all_modules_have_loaded
-					// this.modules             = this.modules.concat( module.returned || [] )
-					this.loaded              = this.loaded.concat( module.returned || [] )
-					this.load_completion_map = self.create_updated_load_completion_map({
-						map  : this.load_completion_map,
-						path : module.path
-					})
-
-					all_modules_have_loaded  = self.do_all_members_of_an_array_equal({
-						value : true,
-						array : this.load_completion_map.load
-					})
-
-					if ( all_modules_have_loaded ) {
-						this.loading_done = this.loading_done.concat( true )
-						this.loading_done_method.call({}, {
-							path : this.loaded
-						})
-					}
-				},				
-				call_this_method_on_load_completion : function ( method ) {
-					this.loading_done_method = method
-				},
-
-				is_module_loading_done    : self.is_module_loading_done,
-				get_module_name_from_path : self.get_module_name_from_path
 			}
 		}
 	}

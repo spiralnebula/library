@@ -3,6 +3,7 @@ define({
 	module : [
 		"get",
 		"nebula",
-		"sort"
+		"sort",
+		"configuration_sort"
 	]
 })
