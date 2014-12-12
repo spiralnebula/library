@@ -9,12 +9,7 @@
 		paramaters.root_directory || 
 		module.get_the_root_directory_based_on_last_loaded_script_src( last_loaded_script )
 	)
-
-	if ( typeof window.define === 'function' && window.define.amd) {
-		console.log("amd exists")
-
-	} else {
-
+	initiate_entry            = function () { 
 		if ( typeof window.jasmine === "object" ) {
 
 			var module_name
@@ -39,7 +34,7 @@
 							"*" : {
 								"css" : paramaters.root_directory + "/nebula/require_css/css.js"
 							}
-						}
+						},
 					})
 
 					requirejs( 
@@ -84,10 +79,17 @@
 		}
 	}
 
-})( 
-	window,
-	{
+	if ( typeof window.define === 'function' && window.define.amd) {
+		initiate_entry()
+	} else {
+		initiate_entry()
+	}
 
+})( 
+
+	window,
+
+	{
 		get_the_root_directory_based_on_last_loaded_script_src : function ( last_loaded_script ) {
 			
 			var root_path, script_source_from_attribute

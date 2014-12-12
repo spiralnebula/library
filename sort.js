@@ -438,16 +438,10 @@
 		},
 
 		get_full_url_from_root_and_path : function ( get ) {
-
 			var file_type_match, file_type, known_file_types
-
 			file_type_match  = get.path.match(/\.[a-zA-Z0-9]*$/)
-			known_file_types = [".json", ".js", ".css"]
-			file_type        = ( 
-				file_type_match && file_type_match.length > 0 ? 
-					file_type_match.slice(file_type_match.length-1)[0] : 
-					false 
-			)
+			known_file_types = [".json", ".js"]
+			file_type        = ( file_type_match && file_type_match.length > 0 ? file_type_match.slice(file_type_match.length-1)[0] : false )
 			
 			if ( file_type !== false && known_file_types.indexOf( file_type ) > -1 ) {
 				return get.root +"/"+ get.path

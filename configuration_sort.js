@@ -23,7 +23,7 @@
 			return {
 				style  : self.convert_path_definition_to_array({ 
 					definition    : convert.configuration.style || [],
-					previous_path : convert.previous_path
+					previous_path : "css!"+convert.previous_path
 				}),
 				module : self.convert_path_definition_to_array({ 
 					definition    : [].concat( convert.configuration.main, convert.configuration.module ),
