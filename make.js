@@ -29,7 +29,7 @@
 					load_map         : given.path.module,
 					root_directory   : module.root,
 					set_global       : function ( object ) {
-
+						console.log("globale")
 
 						if ( module.paramaters.start_with ) {
 
@@ -77,6 +77,8 @@
 								console.warn("package cant start with \""+ module.paramaters.start_with +"\" because it does not exists in the configuration.js file")
 							}
 
+						} else if ( module.paramaters.export_as ) { 
+							window[module.paramaters.export_as] = object
 						} else { 
 							object.make()
 						}
