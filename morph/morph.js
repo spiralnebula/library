@@ -10,62 +10,6 @@
 		define : { 
 			allow : "*"
 		},
-		// a structure perserving map
-		homomorph : function (what) {
-			
-			var set, with_function_for_nested_objects, with_function, count
-
-			count                            = -1
-			set                              = ( what.set === "array" ? [] : {} )
-			with_function_for_nested_objects = function (member) {
-				return member.value
-			}
-			with_function                    = what.with || with_function_for_nested_objects
-
-
-			for ( var property in what.object ) {
-
-				if ( what.object.hasOwnProperty(property) ) {
-
-					var new_value, count
-					count     = count + 1
-					new_value = what.object[property]
-
-					if ( what.object[property].constructor === Object )
-						new_value = this.homomorph({
-							object : what.object[property],
-							with   : with_function_for_nested_objects
-						})
-
-					if ( what.object[property].constructor === Array )
-						new_value = what.object[property].slice(0)
-
-					if ( set.constructor === Array ) {
-						var return_value = with_function.call({}, {
-							value         : new_value,
-							property_name : property,
-							set           : set,
-							count         : count
-						})
-						set = set.concat(( 
-							return_value.constructor === Array ?
-							[return_value] :
-							return_value
-						))
-					}
-					
-					if ( set.constructor === Object )
-						set[property] = with_function.call({}, {
-							value         : new_value,
-							property_name : property,
-							set           : set,
-							count         : count
-						})
-				}
-			}
-
-			return set
-		},
 
 		inject_array : function ( what ) {
 			
@@ -74,9 +18,14 @@
 			}
 
 			if ( what.with.constructor === Object ) {
-				return what.array.concat( this.homomorph({
-					object : what.with,
-					set    : "array"
+				return what.array.concat( this.object_loop({
+					subject : what.with,
+					"into?" : [],
+					else_do : function ( loop ) { 
+						return { 
+							into : loop.into.concat( loop.value )
+						}
+					}
 				}) )
 			}
 
@@ -93,6 +42,33 @@
 						}
 					}
 				}))
+			}
+		},
+
+		inject_object : function ( what ) {
+
+			if ( what.with.constructor === Array ) {
+				return this.index_loop({
+					subject : what.with,
+					into    : what.object,
+					else_do : function ( loop ) {
+						loop.into[loop.index] = loop.indexed
+						return loop.into
+					}
+				})
+			}
+
+			if ( what.with.constructor === Object ) {
+				return this.object_loop({
+					subject : what.with,
+					"into?" : what.object,
+					else_do : function ( loop ) { 
+						loop.into[loop.key] = loop.value
+						return { 
+							into : loop.into
+						}
+					}
+				})
 			}
 		},
 
@@ -169,6 +145,271 @@
 					})
 				})
 			}
+		},
+
+		biject_object : function ( biject ) {
+
+			var key, value, self, into_key, into_value
+
+			self       = this
+			key        = this.get_the_keys_of_an_object( biject.object )
+			value      = this.get_the_values_of_an_object( biject.object )
+			into_key   = this.get_the_keys_of_an_object( biject.into ) 
+			into_value = this.get_the_values_of_an_object( biject.into )
+			
+			if ( biject.into !== undefined && into_key.length !== key.length ) {
+				return biject.object
+			}
+
+			return this.base_loop({
+				"index"   : 0,
+				"length"  : key.length,
+				"subject" : key.slice(0),
+				"into"    : { 
+					key   : ( biject.into ? into_key : [] ),
+					value : ( biject.into ? into_value : [] ),
+				},
+				"map" : {
+					"key"   : [],
+					"value" : [],
+				},
+				is_done_when : function ( base_loop ) {
+					return ( base_loop.index === key.length )
+				},
+				if_done : function ( base_loop ) { 
+					return self.get_object_from_array({
+						key   : base_loop.map.key,
+						value : base_loop.map.value
+					})
+				},
+				else_do      : function ( base_loop ) {
+					
+					var given, current_key, current_value, given_key_index_in_given_keys, final_value
+
+					current_key   = key[base_loop.index]
+					current_value = value[base_loop.index]
+					given         = biject.with.call({}, {
+						"key"   : current_key,
+						"value" : current_value,
+						"index" : base_loop.index,
+						"into"  : {
+							"key"   : ( 
+								base_loop.into.key.length > 0 ?
+									base_loop.into.key[base_loop.index] :
+									false
+							),
+							"value" : ( 
+								base_loop.into.value.length > 0 ? 
+									base_loop.into.value[base_loop.index] :
+									false
+							),
+						}
+					})
+
+					final_value                   = ( 
+						given.value === undefined ? 
+							current_value : 
+							given.value 
+					)
+					given_key_index_in_given_keys = base_loop.map.key.indexOf( given.key )
+					
+					if ( given_key_index_in_given_keys > -1 ) {
+						console.warn("...")
+						console.warn("returned key :\""+ given.key +"\" at index : \""+ base_loop.index +"\"")
+						console.warn("duplicates an existing key at index :\""+ given_key_index_in_given_keys +"\"")
+						console.warn("revering to original value of :\""+ current_key +"\"")
+						console.warn("for bijected object = ")
+						console.warn( biject.object )
+						console.warn(".....")
+					}
+
+					return {
+						"length" : base_loop.length,
+						"map"    : {
+							key : base_loop.map.key.concat((
+								!given.key || given_key_index_in_given_keys > -1 ?
+									current_key :
+									given.key
+							)),
+							value : (
+								final_value && final_value.constructor === Array ? 
+									base_loop.map.value.concat( [ final_value ] ): 
+									base_loop.map.value.concat( final_value )
+							)
+						},
+						"index"        : base_loop.index + 1,
+						"is_done_when" : base_loop.is_done_when,
+						"if_done"      : base_loop.if_done,
+						"else_do"      : base_loop.else_do,
+						"into"         : base_loop.into,
+					}
+				}
+			})
+		},
+
+		biject_array : function ( biject ) {
+
+			var self, array, into
+			self  = this
+			array = (
+				biject.array.constructor === HTMLCollection ?
+					self.convert_node_list_to_array( biject.array ) :
+					biject.array
+			)
+
+			// return this.base_loop({
+			// 	"index"   : 0,
+			// 	"length"  : biject.array.length,
+			// 	"subject" : array,
+			// 	"into"    : biject.into.slice(0),
+			// 	"result"  : [],
+			// 	is_done_when : function ( base_loop ) {
+			// 		return ( base_loop.index === key.length )
+			// 	},
+			// 	if_done : function ( base_loop ) { 
+			// 		return 
+			// 	},
+			// 	else_do      : function ( base_loop ) {
+			// 	}
+			// })
+
+			// return this.index_loop_base({
+			// 	"subject"  : [],
+			// 	"start_at" : 0,
+			// 	"into"     : [],
+			// 	if_done  : function (base_loop) {
+			// 		return base_loop.into
+			// 	},
+			// 	else_do : function (base_loop) {
+			// 		return {
+			// 			"subject"  : self.copy({
+			// 				what : base_loop.subject 
+			// 			}),
+			// 			"into"     : base_loop.into.concat(
+			// 				biject.with({
+			// 					"index"   : base_loop.start_at,
+			// 					"indexed" : self.copy({
+			// 						what : base_loop.subject[base_loop.start_at]
+			// 					})
+			// 				})
+			// 			),
+			// 			"start_at" : base_loop.start_at + 1,
+			// 			"if_done"  : base_loop.if_done,
+			// 			"else_do"  : base_loop.else_do
+			// 		}
+			// 	}
+			// })
+		},
+
+		object_loop : function ( loop ) { 
+			
+			var key, value, self
+			self  = this
+			key   = this.get_the_keys_of_an_object( loop.subject )
+			value = this.get_the_values_of_an_object( loop.subject )
+
+			return this.base_loop({
+				length  : key.length,
+				index   : 0,
+				subject : key.slice(0),
+				map     : {
+					"key"   : [],
+					"value" : [],
+					"into"  : loop["into?"] || ""
+				},
+				is_done_when : function ( base_loop ) {
+					return ( base_loop.index === key.length )
+				},
+				if_done     : function ( base_loop ) {
+					var result, object
+					object = self.get_object_from_array({
+						key   : base_loop.map.key,
+						value : base_loop.map.value
+					})
+
+					if ( loop["if_done?"] ) { 
+						result = loop["if_done?"].call({}, { 
+							key    : base_loop.map.key.slice(0),
+							value  : base_loop.map.value.slice(0),
+							into   : base_loop.map.into,
+							object : object
+						})
+					}
+					
+					if ( 
+						loop["into?"]    !== undefined &&
+						loop["if_done?"] === undefined
+					) {
+						result = base_loop.map.into
+					}
+
+					return result || object
+				},
+				else_do      : function ( base_loop ) {
+					var given
+					given = loop.else_do.call({}, {
+						"key"   : key[base_loop.index],
+						"value" : value[base_loop.index],
+						"into"  : base_loop.map.into,
+						"index" : base_loop.index
+					})
+					return {
+						length       : base_loop.length,
+						map          : {
+							key   : base_loop.map.key.concat((
+								given.key !== undefined ? 
+									given.key :
+									base_loop.map.key
+							)),
+							value : base_loop.map.value.concat((
+								given.value !== undefined ? 
+									given.value : 
+									base_loop.map.value
+							)),
+							into  : (
+								given.into !== undefined ?
+									given.into :
+									base_loop.map.into
+							)
+						},
+						index        : base_loop.index + 1,
+						is_done_when : base_loop.is_done_when,
+						if_done      : base_loop.if_done,
+						else_do      : base_loop.else_do,
+					}
+				}
+			})
+		},
+
+		does_array_contain_this_value : function ( contained ) { 
+			var self = this
+			return this.index_loop_base({
+				subject  : contained.array,
+				into     : false,
+				start_at : 0,
+				if_done  : function ( loop ) { 
+					return loop.into
+				},
+				else_do : function ( loop ) {
+					var does_contained_value_match_indexed_value
+					does_contained_value_match_indexed_value = self.are_these_two_values_the_same({
+						first  : loop.subject[loop.start_at],
+						second : contained.value
+					})
+					console.log( does_contained_value_match_indexed_value )
+					return {
+						subject         : loop.subject,
+						start_at        : (
+							does_contained_value_match_indexed_value ? 
+								loop.subject.length-1 :
+								loop.start_at + 1
+						),
+						into    : does_contained_value_match_indexed_value,
+						if_done : loop.if_done,
+						else_do : loop.else_do
+					}
+				}
+			})
 		},
 
 		are_these_two_values_the_same : function( value ) {
@@ -274,25 +515,34 @@
 			}
   		},
 
-  		are_these_two_arrays_the_same : function ( value ) {
+  		are_these_two_objects_the_same : function ( value ) {
 
-  			var first_object_keys, self
+  			var self, first_object_keys, second_object_keys
 
-  			self              = this
-			first_object_keys = this.get_the_keys_of_an_object( value.first )
+			self               = this
+			first_object_keys  = this.get_the_keys_of_an_object( value.first )
+			second_object_keys = this.get_the_keys_of_an_object( value.second )
 
-      		if ( this.get_the_keys_of_an_object( value.second ).length === first_object_keys.length ) {
+      		if ( second_object_keys.length === first_object_keys.length ) {
       			return this.while_greater_than_zero({
 					count   : first_object_keys.length,
 					into    : false,
 					else_do : function ( loop ) {
 
-						var key_name
-						key_name = first_object_keys[loop.count]
+						var key_name, second_object_has_same_name_key, ascending_index
+						
+						ascending_index                 = first_object_keys.length-loop.count
+						key_name                        = first_object_keys[ascending_index]
+						second_object_has_same_name_key = value.second.hasOwnProperty( key_name )
 
-						return (
-							self.are_these_two_values_the_same( value.first[key_name], value.second[key_name], value.first_stack, value.second_stack )
-						)
+						if ( second_object_has_same_name_key ) {
+							return self.are_these_two_values_the_same({
+								first  : value.first[key_name],
+								second : value.second[key_name]
+							})
+						}
+
+						return false
       				}
       			})
 			} else { 
@@ -300,31 +550,29 @@
 			}
   		},
 
-  		are_these_two_objects_the_same : function ( value ) {
+  		are_these_two_arrays_the_same : function ( value ) {
 
-  			var self, first_object_keys
+  			var self, sorted_first_array, sorted_second_array
 
-  			self              = this
-			first_object_keys = this.get_the_keys_of_an_object( value.first )
+			self                = this
+			sorted_first_array  = value.first.slice().sort()
+			sorted_second_array = value.second.slice().sort()
+			return this.index_loop({
+				subject : sorted_first_array,
+				into    : true,
+				else_do : function ( loop ) {
 
-      		if ( this.get_the_keys_of_an_object( value.second ).length === first_object_keys.length ) {
-      			return this.while_greater_than_zero({
-					count   : first_object_keys.length,
-					into    : false,
-					else_do : function ( loop ) {
+					if ( loop.into === true ) {
+						return self.are_these_two_values_the_same({
+							first  : loop.indexed,
+							second : value.second[loop.index]
+						})
+					}
 
-						var key_name
-						key_name = first_object_keys[loop.count]
+					return loop.into
 
-						return (
-							value.second.hasOwnProperty( key_name ) && 
-							self.are_these_two_values_the_same( value.first[key_name], value.second[key_name], value.first_stack, value.second_stack )
-						)
-      				}
-      			})
-			} else { 
-				return false
-			}
+				}
+			})
   		},
 
   		get_the_keys_of_an_object : function ( object ) { 
@@ -346,7 +594,7 @@
   				if ( object.hasOwnProperty( property ) ) {
   					var value
   					value = object[property]
-  					if ( value.constructor === Array ) {
+  					if ( value && value.constructor === Array ) {
   						keys = keys.concat([ value ])
   					} else { 
   						keys = keys.concat( value )
@@ -356,10 +604,6 @@
 
   			return keys
   		},
-
-		biject : function () {
-
-		},
 
 		get_object_from_array : function ( array ) {
 			return this.index_loop({
@@ -425,7 +669,11 @@
 			var self = this
 
 			return this.index_loop_base({
-				subject  : loop.subject,
+				subject  : ( 
+					loop.subject.constructor === HTMLCollection ?
+						self.convert_node_list_to_array( loop.subject ) :
+						loop.subject 
+				),
 				start_at : loop.start_at || 0,
 				into     : this.replace_with_default({ what : loop.into, default : [] }),
 				if_done  : loop.if_done  || function (base_loop) {
@@ -478,73 +726,31 @@
 			}
 		},
 
-		object_loop : function ( loop ) { 
-			
-			var key, value, self
-			self  = this
-			key   = this.get_the_keys_of_an_object( loop.subject )
-			value = this.get_the_values_of_an_object( loop.subject )
+		convert_node_list_to_array : function ( node_list ) { 
 			return this.base_loop({
-				length       : key.length,
+				node_list    : node_list,
+				node_array   : [],
 				index        : 0,
-				subject      : key.slice(0),
-				map          : {
-					"key"   : [],
-					"value" : [],
-					"into"  : loop["into?"] || ""
+				is_done_when : function ( loop ) {
+					return ( loop.index >= loop.node_list.length )
 				},
-				is_done_when : function ( base_loop ) {
-					return ( base_loop.index === key.length )
+				if_done      : function ( loop ) {
+					return loop.node_array
 				},
-				if_done     : function ( base_loop ) {
-					var result, object
-					object = self.get_object_from_array({
-						key   : base_loop.map.key,
-						value : base_loop.map.value
-					})
-
-					if ( loop["if_done?"] ) { 
-						result = loop["if_done?"].call({}, { 
-							key    : base_loop.map.key.slice(0),
-							value  : base_loop.map.value.slice(0),
-							into   : base_loop.map.into,
-							object : object
-						})
-					}
-					
-					if ( loop["into?"] !== undefined ) {
-						result = base_loop.map.into
-					}
-
-					return result || object
-				},
-				else_do      : function ( base_loop ) {
-					var given
-					given = loop.else_do.call({}, {
-						"key"   : key[base_loop.index],
-						"value" : value[base_loop.index],
-						"into"  : base_loop.map.into,
-						"index" : base_loop.index
-					})
-					return {
-						length       : base_loop.length,
-						map          : {
-							key   : base_loop.map.key.concat(   given.key   || base_loop.map.key ),
-							value : base_loop.map.value.concat( given.value || base_loop.map.value ),
-							into  : given.into || base_loop.map.into
-						},
-						index        : base_loop.index + 1,
-						is_done_when : base_loop.is_done_when,
-						if_done      : base_loop.if_done,
-						else_do      : base_loop.else_do,
+				else_do      : function ( loop ) {
+					return { 
+						node_list    : loop.node_list,
+						index        : loop.index + 1,
+						node_array   : loop.node_array.concat( loop.node_list[loop.index] ),
+						is_done_when : loop.is_done_when,
+						if_done      : loop.if_done,
+						else_do      : loop.else_do,
 					}
 				}
 			})
-
 		},
 
 		copy : function (copy) {
-			
 			if ( copy.what.constructor === Array && copy.object_array ) {
 				return this.index_loop({
 					array   : copy.what,
@@ -559,10 +765,13 @@
 			}
 			
 			if (copy.what.constructor === Object) {
-				return this.homomorph({
-					object : copy.what,
-					with   : function (member) {
-						return member.value
+				return this.object_loop({
+					subject : copy.what,
+					else_do : function ( loop ) {
+						return {
+							key   : loop.key,
+							value : loop.value
+						}
 					}
 				})
 			}
@@ -614,6 +823,5 @@
 				this.message = message
 			}
 		},
-		// someting that construct a list from something
 	}
 )

@@ -77,21 +77,65 @@
 
 						} else if ( module.paramaters.export_as ) {
 
-							window[module.paramaters.export_as].made = module.nebula.morph.index_loop({
-								subject : window[module.paramaters.export_as].called,
-								into    : {},
-								else_do : function ( loop ) {
-									console.log( loop.indexed )
-									loop.into[loop.indexed.arguments.called] = object[loop.indexed.method].apply(
-										object, 
-										loop.indexed.arguments 
-									)
+							var made_instances
 
-									return loop.into
+							if ( module.paramaters.export_name_method ) { 
+								made_instances = module.nebula.morph.index_loop({
+									subject : window[module.paramaters.export_as].called.slice(),
+									into    : {},
+									else_do : function ( loop ) {
+										var instance_name
+										instance_name            = object[ module.paramaters.export_name_method ].call(
+											object,
+											loop.indexed.arguments
+										)
+										loop.into[instance_name] = object[loop.indexed.method].call(
+											object, 
+											loop.indexed.arguments 
+										)
+										return loop.into
+									}
+								})	
+							} else { 
+								made_instances = module.nebula.morph.index_loop({
+									subject : window[module.paramaters.export_as].called.slice(),
+									else_do : function ( loop ) {
+										return loop.into.concat(
+											object[loop.indexed.method].call(
+												object, 
+												loop.indexed.arguments 
+											)
+										)
+									}
+								})
+							}
+
+							window[module.paramaters.export_as] = module.nebula.morph.inject_object({
+								object : module.nebula.morph.biject_object({
+									object : module.nebula.morph.surject_object({
+										object : window[module.paramaters.export_as],
+										with   : ["called"],
+										by     : "key"
+									}),
+									with  : function ( loop ) {
+										return {
+											value : ( 
+												loop.value.constructor === Function ? 
+													function () { 
+														object[loop.key].apply(
+															object, 
+															arguments 
+														)
+													} :
+													loop.value
+											)
+										}
+									}
+								}),
+								with : { 
+									made : made_instances
 								}
 							})
-
-							// window[module.paramaters.export_as] = object
 							
 						} else { 
 							object.make()
