@@ -1,15 +1,15 @@
-(function ( window, module ) {
+(function ( window, entry ) {
 
 	var loaded_scripts, last_loaded_script, paramaters
 
 	loaded_scripts            = document.getElementsByTagName("script")
 	last_loaded_script        = loaded_scripts[loaded_scripts.length-1]
-	paramaters                = module.get_data_type_attribute_values( last_loaded_script )
-	paramaters.root_directory = module.remove_slash_at_the_end_of_directory_if_it_has_it(
+	paramaters                = entry.get_data_type_attribute_values( last_loaded_script )
+	paramaters.root_directory = entry.remove_slash_at_the_end_of_directory_if_it_has_it(
 		paramaters.root_directory || 
-		module.get_the_root_directory_based_on_last_loaded_script_src( last_loaded_script )
+		entry.get_the_root_directory_based_on_last_loaded_script_src( last_loaded_script )
 	)
-	console.log( paramaters )
+
 	initiate_entry            = function () {
 
 		if ( paramaters.export_as ) {
@@ -58,7 +58,18 @@
 					paramaters.root_directory + "/nebula/configuration.js",
 					paramaters.root_directory + "/nebula/morph/morph.js",
 					paramaters.root_directory + "/configuration.js"
-				], function ( tool_configuration, morph, module_configuration ) {
+				], function ( nebula_module_configuration, morph, module_configuration ) {
+
+					var nebula_module_paths
+
+					nebula_module_paths  =  morph.index_loop({
+						subject : [].concat( nebula_module_configuration.main, nebula_module_configuration.module ),
+						else_do : function ( loop ) {
+							return loop.into.concat( 
+								paramaters.root_directory + "/nebula/"+ loop.indexed +".js" 
+							)
+						}
+					})
 
 					require.config({
 						map : {
@@ -69,35 +80,16 @@
 					})
 
 					requirejs( 
-						morph.index_loop({
-							subject : [].concat( tool_configuration.main, tool_configuration.module ),
-							else_do : function ( loop ) {
-								return loop.into.concat( paramaters.root_directory + "/nebula/"+ loop.indexed +".js" )
-							}
-						}), 
+						nebula_module_paths,
 						function () {
-
-							var nebula_library, tool_name, tool_object
-							
-							tool_name      = [].concat( tool_configuration.module, "entry", "morph" )
-							tool_object    = Array.prototype.slice.call( arguments ).slice(1).concat( module, morph )
-							tools          = morph.get_object_from_array({
-								key   : tool_name,
-								value : tool_object
-							})
-							nebula_library = morph.index_loop({
-								subject : Array.prototype.slice.call( arguments ).slice(1).concat( module, morph ),
-								into    : {},
-								else_do : function ( loop ) {
-									loop.indexed.nebula              = loop.into
-									loop.into[tool_name[loop.index]] = loop.indexed
-									return loop.into
-								}
-							})
-
-							arguments[0].make({
+							main_module = arguments[0]
+							main_module.make({
 								paramaters    : paramaters,
-								nebula        : nebula_library,
+								library       : entry.format_nebula_modules_by_name({
+									modules              : arguments,
+									module_configuration : nebula_module_configuration,
+									morph                : morph,
+								}),
 								configuration : module_configuration,
 								root          : paramaters.root_directory
 							})
@@ -121,6 +113,23 @@
 	window,
 
 	{
+		format_nebula_modules_by_name : function ( given ) { 
+
+			var modules_by_name, module_names, modules
+
+			module_names    = [].concat( given.module_configuration.module, "entry", "morph" )
+			modules         = Array.prototype.slice.call( given.modules ).slice(1).concat( this, given.morph )
+			return given.morph.index_loop({
+				subject : modules,
+				into    : {},
+				else_do : function ( loop ) {
+					loop.indexed.library                = loop.into
+					loop.into[module_names[loop.index]] = loop.indexed
+					return loop.into
+				}
+			})
+		},
+
 		get_the_root_directory_based_on_last_loaded_script_src : function ( last_loaded_script ) {
 			
 			var root_path, script_source_from_attribute

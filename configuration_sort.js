@@ -44,7 +44,7 @@
 				final_definition = [].concat( path.definition )
 			}
 
-			return this.nebula.morph.index_loop({
+			return this.library.morph.index_loop({
 				subject : final_definition,
 				else_do : function ( loop ) {
 					return loop.into.concat( path.previous_path + loop.indexed )

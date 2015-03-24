@@ -36,7 +36,7 @@
 				
 				package.previous_path = package.previous_path || ""
 
-				self.nebula.morph.index_loop({
+				self.library.morph.index_loop({
 					subject : package.require.package,
 					else_do : function ( loop ) {
 
@@ -57,7 +57,7 @@
 							var package_path, previous_path
 
 							package_path  = get_package_path()
-							previous_path = self.nebula.sort.get_previous_path({
+							previous_path = self.library.sort.get_previous_path({
 								previous : package.previous_path,
 								package  : package_path
 							})
@@ -71,7 +71,7 @@
 
 							package.sort.loaded_module({
 								path      : package_path,
-								returned  : self.nebula.configuration_sort.convert_package_configuration_into_require_paths({
+								returned  : self.library.configuration_sort.convert_package_configuration_into_require_paths({
 									previous_path : previous_path,
 									configuration : configuration
 								})
@@ -87,7 +87,7 @@
 			if ( package.main_package ) {
 				package.sort.loaded_module({
 					path     : package.require.name,
-					returned : self.nebula.configuration_sort.convert_package_configuration_into_require_paths({
+					returned : self.library.configuration_sort.convert_package_configuration_into_require_paths({
 						previous_path : "",
 						configuration : package.require
 					})
@@ -101,7 +101,7 @@
 
 			self              = this
 			module_paths      = require.load_map.slice(0)
-			module_load_paths = this.nebula.sort.get_module_paths_with_appended_root_directory({
+			module_load_paths = this.library.sort.get_module_paths_with_appended_root_directory({
 				root_directory : require.root_directory,
 				module_paths   : module_paths
 			})
@@ -110,17 +110,17 @@
 
 				var module_by_path, module_by_name
 
-				module_by_path = self.nebula.sort.sort_module_paths_and_objects_into_module_path_map({
+				module_by_path = self.library.sort.sort_module_paths_and_objects_into_module_path_map({
 					path   : module_paths,
 					object : arguments
 				})
-				module_by_name = self.nebula.sort.sort_module_path_map_to_module_by_name_map( module_by_path )
+				module_by_name = self.library.sort.sort_module_path_map_to_module_by_name_map( module_by_path )
 				
 				for ( var path in module_by_path ) {
 
-					module_by_path[path].library = self.nebula.sort.get_modules_which_are_allowed_from_library_based_on_location({
+					module_by_path[path].library = self.library.sort.get_modules_which_are_allowed_from_library_based_on_location({
 						path    : path,
-						library : self.nebula.sort.get_required_modules_as_a_module_library_based_on_definition({
+						library : self.library.sort.get_required_modules_as_a_module_library_based_on_definition({
 							define      : module_by_path[path].define || {},
 							location    : path,
 							map_by_name : module_by_name,

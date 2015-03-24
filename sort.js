@@ -20,7 +20,7 @@
 
 		get_module_paths_with_appended_root_directory : function ( get ) { 
 			var self = this
-			return this.nebula.morph.index_loop({
+			return this.library.morph.index_loop({
 				subject : get.module_paths,
 				else_do : function ( loop ) {
 					return loop.into.concat( 
@@ -231,7 +231,7 @@
 			
 			var library_paths, local_directory_names, potential_paths, module_directory
 			
-			library_paths         = this.nebula.morph.get_the_keys_of_an_object( module.library )
+			library_paths         = this.library.morph.get_the_keys_of_an_object( module.library )
 			module_directory      = ( module.location ? this.get_path_directory( module.location ) + "/" : "" )
 			local_directory_names = this.get_folder_names_in_the_path_based_on_map_by_name({
 				path      : module_directory,
@@ -346,7 +346,7 @@
 
 		sort_module_path_map_to_module_by_name_map : function ( map ) {
 			var self = this
-			return this.nebula.morph.object_loop({
+			return this.library.morph.object_loop({
 				"subject" : map,
 				"into?"   : {},
 				"else_do" : function ( loop ) {
