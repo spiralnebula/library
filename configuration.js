@@ -4,6 +4,7 @@ define({
 		"get",
 		"nebula",
 		"sort",
-		"configuration_sort"
+		"configuration_sort",
+        "morph"
 	]
 })

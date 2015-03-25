@@ -1,136 +1,237 @@
 (function ( window, entry ) {
 
-	var loaded_scripts, last_loaded_script, paramaters
-
-	loaded_scripts            = document.getElementsByTagName("script")
-	last_loaded_script        = loaded_scripts[loaded_scripts.length-1]
-	paramaters                = entry.get_data_type_attribute_values( last_loaded_script )
-	paramaters.root_directory = entry.remove_slash_at_the_end_of_directory_if_it_has_it(
-		paramaters.root_directory || 
-		entry.get_the_root_directory_based_on_last_loaded_script_src( last_loaded_script )
-	)
-
-	initiate_entry            = function () {
-
-		if ( paramaters.export_as ) {
-
-			var methods_to_export_on_object, ss
-
-			methods_to_export_on_object  = ( paramaters.export_methods || "make" ).split(":")
-			window[paramaters.export_as] = {
-				called : [],
-				made   : {},
-			}
-			export_method_to_window_object = function ( given ) { 
-				
-				var export_method_name
-
-				export_method_name                               = given.method_name
-				window[paramaters.export_as][export_method_name] = function () {
-					this.called = this.called.concat({
-						method    : given.method_name,
-						arguments : Array.prototype.slice.call( arguments )
-					})
-				}
-			}
-
-			for (var index = 0; index < methods_to_export_on_object.length; index++) {
-				export_method_to_window_object({ 
-					method_name : methods_to_export_on_object[index]
-				})
-			}
-		}
-
-		if ( typeof window.jasmine === "object" ) {
-
-			var module_name
-			module_name         = this_script.getAttribute("data-module-name") || "entry"
-			window[module_name] = module
-
-		} else {
-
-			var require_js
-			require_js         = document.createElement("script")
-			require_js.src     = paramaters.root_directory + "/require.js"
-			require_js.onload  = function () {
-
-				requirejs([
-					paramaters.root_directory + "/nebula/configuration.js",
-					paramaters.root_directory + "/nebula/morph/morph.js",
-					paramaters.root_directory + "/configuration.js"
-				], function ( nebula_module_configuration, morph, module_configuration ) {
-
-					var nebula_module_paths
-
-					nebula_module_paths  =  morph.index_loop({
-						subject : [].concat( nebula_module_configuration.main, nebula_module_configuration.module ),
-						else_do : function ( loop ) {
-							return loop.into.concat( 
-								paramaters.root_directory + "/nebula/"+ loop.indexed +".js" 
-							)
-						}
-					})
-
-					require.config({
-						map : {
-							"*" : {
-								"css" : paramaters.root_directory + "/nebula/require_css/css.js"
-							}
-						},
-					})
-
-					requirejs( 
-						nebula_module_paths,
-						function () {
-							main_module = arguments[0]
-							main_module.make({
-								paramaters    : paramaters,
-								library       : entry.format_nebula_modules_by_name({
-									modules              : arguments,
-									module_configuration : nebula_module_configuration,
-									morph                : morph,
-								}),
-								configuration : module_configuration,
-								root          : paramaters.root_directory
-							})
-						}
-					)
-				})
-			}
-
-			document.head.appendChild(require_js)
-		}
-	}
-
-	if ( typeof window.define === 'function' && window.define.amd) {
-		initiate_entry()
+	if ( entry.amd_exists() ) {
+		entry.make();
 	} else {
-		initiate_entry()
+		entry.make();
 	}
 
 })( 
 
 	window,
 
-	{
-		format_nebula_modules_by_name : function ( given ) { 
+	{	
+		make : function () {
+			
+			var paramaters;
+			
+			paramaters = this.get_package_paramaters();
 
-			var modules_by_name, module_names, modules
+			if ( paramaters.export_as ) {
+				this.export_package( paramaters.export_as );
+				this.export_package_methods( paramaters );
+			} 
 
-			module_names    = [].concat( given.module_configuration.module, "entry", "morph" )
-			modules         = Array.prototype.slice.call( given.modules ).slice(1).concat( this, given.morph )
-			return given.morph.index_loop({
-				subject : modules,
-				into    : {},
-				else_do : function ( loop ) {
-					loop.indexed.library                = loop.into
-					loop.into[module_names[loop.index]] = loop.indexed
-					return loop.into
+			if ( this.is_being_tested() ) {
+				window[module_name] = module
+			} else {
+				this.load_requirejs( paramaters );
+			}
+		},
+
+		load_requirejs : function ( paramaters ) {
+
+			var script, self
+			
+			self          = this
+			script        = document.createElement("script")
+			script.src    = paramaters.root_directory + "/require.js"
+			script.onload = function () {
+				self.load_configuration( paramaters )
+			}
+
+			document.head.appendChild(script);
+		},
+
+		load_configuration : function ( paramaters ) {
+
+			var self = this
+
+			requirejs([
+				paramaters.root_directory + "/nebula/configuration.js",
+				paramaters.root_directory + "/configuration.js"
+			], function ( configuration, package_configuration ) {
+
+				self.configure_requirejs( paramaters )
+
+				self.load_package({
+					package_configuration : package_configuration,
+					configuration : configuration,
+					paramaters : paramaters,
+				})
+			})
+		},
+
+		configure_requirejs : function ( paramaters ) { 
+			require.config({
+				map : {
+					"*" : {
+						"css" : paramaters.root_directory + "/nebula/css.js"
+					}
+				},
+			})
+		},
+
+		load_package : function ( given ) {
+			this.load_nebula({
+				configuration : given.configuration,
+				paramaters : given.paramaters,
+				package_configuration : given.package_configuration,
+				nebula_module_paths : this.create_module_paths({
+					configuration : given.configuration,
+					root_directory : given.paramaters.root_directory
+				})
+			})
+		},
+
+		load_nebula : function ( given ) {
+			var self = this
+			requirejs( given.nebula_module_paths, function () {
+				self.make_nebula({
+					configuration : given.configuration,
+					paramaters : given.paramaters,
+					package_configuration : given.package_configuration,
+					modules : arguments
+				})
+			})
+		},
+
+		make_nebula : function ( given ) {
+
+			var library, main_module;
+			
+			main_module = given.modules[0]
+			library = this.format_nebula_modules_by_name({
+				modules              : given.modules,
+				module_configuration : given.configuration,
+			})
+
+			main_module.make({
+				paramaters    : given.paramaters,
+				library       : library,
+				configuration : given.package_configuration,
+				root          : given.paramaters.root_directory
+			})
+		},
+
+		create_module_paths : function ( from ) {
+
+			var paths, module_paths
+			paths = this.create_base_module_paths( from.configuration )
+			module_paths = [];
+
+			for (var index = 0; index < paths.length; index++) {
+				module_paths.push( from.root_directory + "/nebula/"+ paths[index] +".js" )
+			};
+
+			return module_paths;
+		},
+
+		create_base_module_paths : function ( configuration ) { 
+			return [].concat( configuration.main, configuration.module );
+		},
+
+		is_being_tested : function () { 
+			return ( typeof window.jasmine === "object" );
+		},
+
+		amd_exists : function () {
+			return ( typeof window.define === 'function' && window.define.amd );
+		},
+
+		export_package : function ( called ) { 
+			window[called] = {
+				called : [],
+				made   : {},
+			};
+		},
+
+		export_package_methods : function ( paramaters ) {
+
+			var methods_to_export;
+			methods_to_export = this.get_methods_to_export( paramaters );
+
+			for (var index = 0; index < methods_to_export.length; index++) {
+				this.export_package_method({
+					package : paramaters.export_as,
+					method : methods_to_export[index]
+				});
+			}
+		},
+
+		export_package_method : function ( export_as ) {
+
+			window[export_as.package][export_as.method] = function () {
+				this.called = this.called.concat({
+					method    : export_as.method,
+					arguments : Array.prototype.slice.call( arguments )
+				})
+			}
+		},
+
+		get_methods_to_export : function ( paramaters ) { 
+			return ( paramaters.export_methods || "make" ).split(":");
+		},
+
+		get_package_paramaters : function () { 
+			
+			var last_loaded_script, paramaters;
+
+			last_loaded_script = this.get_last_loaded_script();
+			paramaters = this.get_data_type_attribute_values( last_loaded_script );
+			paramaters.root_directory = this.get_path_without_end_slash(
+				paramaters.root_directory || this.get_the_root_directory_of_script( last_loaded_script )
+			);
+
+			return paramaters;
+		},
+
+		get_last_loaded_script : function () {
+
+			var scripts = document.getElementsByTagName("script");
+			return scripts[scripts.length-1];
+		},
+
+		get_data_type_attribute_values : function ( node ) {
+
+			var node_attributes, index;
+			node_attributes = {};
+
+			for (index = 0; index < node.attributes.length; index++) {
+
+				var attribute, name;
+
+				attribute = node.attributes.item(index);
+				name = this.format_attribute_name_to_paramater( attribute.name );
+				node_attributes[name] = attribute.value
+			};
+
+			return node_attributes;
+		},
+
+		format_attribute_name_to_paramater : function ( name ) {
+
+			return name.replace(/(data-|-)/g, function ( match ) {
+				
+				if ( match === "data-" ) { 
+					return "";
+				}
+				if ( match === "-" ) { 
+					return "_";
 				}
 			})
 		},
 
-		get_the_root_directory_based_on_last_loaded_script_src : function ( last_loaded_script ) {
+		get_path_without_end_slash : function ( path ) {
+
+			if ( path[path.length-1] === "/" ) { 
+				return path.slice(0, path.length-1 )
+			} else { 
+				return path
+			}
+		},
+
+		get_the_root_directory_of_script : function ( last_loaded_script ) {
 			
 			var root_path, script_source_from_attribute
 
@@ -163,33 +264,21 @@
 			}
 		},
 
-		remove_slash_at_the_end_of_directory_if_it_has_it : function ( directory ) { 
-			if ( directory[directory.length-1] === "/" ) { 
-				return directory.slice(0, directory.length-1 )
-			} else { 
-				return directory
-			}
+		format_nebula_modules_by_name : function ( given ) { 
+
+			var module_names, modules, library;
+
+            module_names = [].concat( given.module_configuration.module, "entry" );
+            modules = Array.prototype.slice.call( given.modules ).slice(1);
+            library = {}
+
+            for (var index = 0; index < modules.length; index++) {
+                var module = modules[index];
+                module.library = library
+                library[module_names[index]] = module
+            };
+
+            return library
 		},
-
-		get_data_type_attribute_values : function ( node ) {
-
-			var node_attributes = {}
-			for ( var attribute in node.attributes ) {
-
-				if ( !isNaN( attribute ) && node.attributes[attribute].name.match("data-") !== null ) {
-
-					var attribute_name = node.attributes[attribute].name.replace(/(data-|-)/g, function ( match ) { 
-						if ( match === "data-" ) { 
-							return ""
-						}
-						if ( match === "-" ) { 
-							return "_"
-						}
-					})
-					node_attributes[attribute_name] = node.attributes[attribute].value
-				}
-			}
-			return node_attributes
-		}
 	}
 )
